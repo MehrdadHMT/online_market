@@ -44,7 +44,7 @@ class LoginView(APIView):
             return Response({"message": "Incorrect Login credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
         if account.is_active:
-            login(request, account)
+            # login(request, account)
 
             token = Token.objects.create(user=account).key
 
@@ -62,7 +62,7 @@ class LogoutView(APIView):
     def get(self, request):
         request.user.auth_tokens.get(key=request.auth.key).delete()
 
-        logout(request)
+        # logout(request)
 
         return Response(status=status.HTTP_200_OK)
 
