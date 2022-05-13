@@ -3,7 +3,7 @@ from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import (ProductSerializer, ProductDetailSerializer, CommentSerializer, ProductScoreSerializer,
+from .serializers import (ProductSerializer, ProductDetailSerializer, CommentCreateSerializer, ProductScoreSerializer,
                           CartItemSerializer, AddCartItemSerializer, RemoveCartItemSerializer)
 from .permissions import IsAdminUserOrReadOnly, IsAdminUserOrObjectCreator
 from .models import Product, CartItem, ShopOrder
@@ -22,17 +22,28 @@ class ProductDetailView(generics.RetrieveAPIView):
     serializer_class = ProductDetailSerializer
 
 
-class CommentView(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUserOrObjectCreator]
-    serializer_class = CommentSerializer
+# class CommentView(generics.ListCreateAPIView):
+#     permission_classes = [IsAdminUserOrObjectCreator]
+#     serializer_class = CommentSerializer
+#
+#     def get_queryset(self):
+#         p = Product.objects.get(pk=self.kwargs.get('pk'))
+#         comments = p.comments.all()
+#         if self.request.user.is_staff:
+#             return comments
+#         elif self.request.method in permissions.SAFE_METHODS:
+#             return comments.filter(status='v')
 
-    def get_queryset(self):
-        p = Product.objects.get(pk=self.kwargs.get('pk'))
-        comments = p.comments.all()
-        if self.request.user.is_staff:
-            return comments
-        elif self.request.method in permissions.SAFE_METHODS:
-            return comments.filter(status='v')
+
+class CommentView(APIView):
+    permission_classes = [IsAdminUserOrObjectCreator]
+
+    def post(self, request):
+        serializer = CommentCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+
+        print()
 
 
 class ProductScoreView(generics.RetrieveUpdateAPIView):

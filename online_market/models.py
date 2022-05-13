@@ -17,7 +17,7 @@ class Comment(models.Model):
         (REJECTED, 'Rejected by Admin')
     ]
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    content = models.TextField()
+    content = models.TextField(blank=False)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(db_index=True)
     content_object = GenericForeignKey('content_type', 'object_id')
@@ -45,17 +45,7 @@ class Product(models.Model):
         return f"Type: {self.type}, Brand: {self.brand}, Name: {self.name}"
 
 
-# class Cart(models.Model):
-#     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-#     track_id = models.IntegerField()
-#     is_paid = models.BooleanField(default=False)
-#
-#     def __str__(self):
-#         return f'Owner: {self.user.email}'
-
-
 class CartItem(models.Model):
-    # cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_items')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField()

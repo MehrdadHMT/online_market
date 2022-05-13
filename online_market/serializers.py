@@ -1,40 +1,36 @@
 from rest_framework import serializers
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
-from rest_framework.fields import CurrentUserDefault
 
 from user_auth.serializers import UserSerializer
 from .models import Product, Comment, CartItem
 
 
-# class VerifiedCommentsSerializer(serializers.ListSerializer):
-#     def to_representation(self, data):
-#         data = data.filter(status='v')
-#         return super(VerifiedCommentsSerializer, self).to_representation(data)
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(required=False)
+class CommentCreateSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField(required=True)
     creator = UserSerializer(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ["id", "creator", "content", "modified_at", "created_at"]
+        fields = ["product_id", "creator", "content", "modified_at", "created_at"]
         readonly = ["modified_at", "created_at"]
 
-    def create(self, validated_data):
-        product_id = self.context['request'].data.get('product_id')
-        if product_id:
-            product = get_object_or_404(Product, pk=product_id)
-        else:
-            raise TypeError("'product_id' must be passed (as an integer)!")
+    def validate_product_id(self, value):
+        try:
+            Product.objects.get(id=value)
+        except Product.DoesNotExist:
+            raise serializers.ValidationError("There is no product with the entered id")
 
-        user = self.context['request'].user
-        return product.comments.create(**validated_data, creator=user)
-
-    def update(self, instance, validated_data):
-        instance.content = validated_data.get('content', instance.content)
-        return instance
+        return value
+    # def create(self, validated_data):
+    #     product_id = self.context['request'].data.get('product_id')
+    #     product = Product.objects.get(pk=product_id)
+    #     user = self.context['request'].user
+    #     return product.comments.create(**validated_data, creator=user)
+    #
+    # def update(self, instance, validated_data):
+    #     instance.content = validated_data.get('content', instance.content)
+    #     return instance
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -46,25 +42,8 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        exclude = ['vote_quantity', 'product_quantity']
+        exclude = ['id', 'vote_quantity', 'product_quantity']
         read_only = ['created_at', 'modified_at']
-    # comments = CommentSerializer(many=True)
-    #
-    # def update(self, instance, validated_data):
-    #     comments = validated_data.pop("comments")
-    #
-    #     instance = super(ProductDetailSerializer, self).update(instance, validated_data)
-    #
-    #     for comment_data in comments:
-    #         if comment_data.get("id"):
-    #             # comment has an ID so was pre-existing
-    #             continue
-    #         comment = Comment(**comment_data)
-    #         comment.creator = self.context["request"].user
-    #         comment.content_object = instance
-    #         comment.save()
-    #
-    #     return instance
 
 
 class ProductScoreSerializer(serializers.ModelSerializer):

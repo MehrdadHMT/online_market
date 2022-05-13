@@ -7,7 +7,6 @@ from . import views
 urlpatterns = [
     path('products/', views.ProductView.as_view(), name='api_product'),
     path('products/<int:pk>/', views.ProductDetailView.as_view(), name='api_product_detail'),
-    path('opinion/', views.CommentView.as_view(), name='api_comment'),
     path('opinion/<int:pk>/', views.CommentView.as_view(), name='api_comment_list'),
     path('score/<int:pk>/', views.ProductScoreView.as_view(), name='api_score'),
     path('cart/add/', views.CartItemView.as_view(), name='api_cart_add_item'),
