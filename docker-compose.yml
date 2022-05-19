@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - /data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=dbstore
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+  web:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_NAME=dbstore
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+    depends_on:
+      - db

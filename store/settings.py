@@ -82,17 +82,18 @@ class Dev(Configuration):
 
     # Database
     # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-    DATABASES = values.DatabaseURLValue(f"sqlite:///{BASE_DIR}/db.sqlite3")
-    # DATABASES = {
-    #     'default': {
-    #         'ENGINE': 'django.db.backends.postgresql',
-    #         'NAME': 'dbstore',
-    #         'USER': 'postgres',
-    #         'PASSWORD': '1234',
-    #         'HOST': '127.0.0.1',
-    #         'PORT': 5432,
-    #     }
-    # }
+    # DATABASES = values.DatabaseURLValue(f"sqlite:///{BASE_DIR}/db.sqlite3")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'dbstore',
+            'USER': 'postgres',
+            'PASSWORD': '1234',
+            'HOST': '127.0.0.1',
+            # 'HOST': 'db',
+            'PORT': 5432,
+        }
+    }
 
     # Password validation
     # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -147,7 +148,7 @@ class Dev(Configuration):
             "rest_framework.permissions.IsAuthenticated",
         ],
         "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-        "PAGE_SIZE": 2,
+        "PAGE_SIZE": 5,
     }
 
 

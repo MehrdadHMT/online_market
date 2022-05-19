@@ -16,7 +16,7 @@ class Comment(models.Model):
         (WAITING, "Waiting to validate by Admin"),
         (REJECTED, 'Rejected by Admin')
     ]
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField(blank=False)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(db_index=True)
@@ -39,7 +39,10 @@ class Product(models.Model):
     score = models.DecimalField(default=0, decimal_places=2, max_digits=3,
                                 validators=[MinValueValidator(-5), MaxValueValidator(5)])
     vote_quantity = models.IntegerField(default=0)
-    product_quantity = models.IntegerField(default=0)
+    product_quantity = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ['type', 'brand', 'name']
 
     def __str__(self):
         return f"Type: {self.type}, Brand: {self.brand}, Name: {self.name}"

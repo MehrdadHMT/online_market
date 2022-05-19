@@ -3,16 +3,25 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.shortcuts import get_object_or_404
 
 from user_auth.serializers import UserSerializer
-from .models import Product, Comment, CartItem
+from .models import Product, Comment, CartItem, ShopOrder
 
 
-class CommentCreateSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField(required=True)
-    creator = UserSerializer(read_only=True)
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Comment
-        fields = ["product_id", "creator", "content", "modified_at", "created_at"]
+        fields = ["user", "content", "modified_at", "created_at"]
+        readonly = ["modified_at", "created_at"]
+
+
+class CommentCreateSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=True)
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ["id", "user", "content", "modified_at", "created_at"]
         readonly = ["modified_at", "created_at"]
 
     def validate_product_id(self, value):
@@ -22,15 +31,11 @@ class CommentCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("There is no product with the entered id")
 
         return value
-    # def create(self, validated_data):
-    #     product_id = self.context['request'].data.get('product_id')
-    #     product = Product.objects.get(pk=product_id)
-    #     user = self.context['request'].user
-    #     return product.comments.create(**validated_data, creator=user)
-    #
-    # def update(self, instance, validated_data):
-    #     instance.content = validated_data.get('content', instance.content)
-    #     return instance
+
+    def create(self, validated_data):
+        product = Product.objects.get(pk=validated_data['id'])
+        user = self.context['request'].user
+        return product.comments.create(content=validated_data['content'], user=user)
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -64,13 +69,27 @@ class ProductScoreSerializer(serializers.ModelSerializer):
         return instance
 
 
-class CartItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField(validators=[MinValueValidator(1)])
-    quantity = serializers.IntegerField(validators=[MinValueValidator(1)])
+class CartItemCreateSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField(validators=[MinValueValidator(1)], required=True)
+    quantity = serializers.IntegerField(validators=[MinValueValidator(1)], required=True)
 
     class Meta:
         model = CartItem
         fields = ['product_id', 'quantity']
+
+    def validate(self, data):
+        if self.context:
+            if self.context['request'].method == 'POST':    # for AddCartItemSerializer's nested serializer!
+                return data
+        try:
+            p = Product.objects.get(pk=data['product_id'])
+        except Product.DoesNotExist:
+            raise serializers.ValidationError("There is no product with the entered id")
+
+        if p.product_quantity < data['quantity']:
+            raise serializers.ValidationError("There are not enough number of this product in the store!")
+
+        return data
 
     def create(self, validated_data):
         user = self.context['request'].user
@@ -78,18 +97,32 @@ class CartItemSerializer(serializers.ModelSerializer):
         quantity = validated_data['quantity']
         return CartItem.objects.create(user=user, product=product, quantity=quantity)
 
-    # def validate(self, data):
-    #     try:
-    #         product = Product.objects.get(pk=data['product_id'])
-    #     except Product.DoesNotExist:
-    #         raise serializers.ValidationError('There is no product with the entered id!')
-    #     if product.product_quantity < data['quantity']:
-    #         raise serializers.ValidationError('There is not enough number of this product in the store!')
-    #     return data
+
+class CartItemListSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product_id', 'quantity']
+
+
+class CartItemEditSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ['product_id', 'quantity']
+
+    def validate(self, data):
+        p = Product.objects.get(pk=self.instance.product_id)
+        if p.product_quantity < data['quantity']:
+            raise serializers.ValidationError("There are not enough number of this product in the store!")
+
+        return data
 
 
 class AddCartItemSerializer(serializers.Serializer):
-    items_list = serializers.ListField(child=CartItemSerializer(), required=True, allow_empty=False)
+    items_list = serializers.ListField(child=CartItemCreateSerializer(), required=True, allow_empty=False)
 
 
 class RemoveCartItemSerializer(serializers.Serializer):
@@ -117,3 +150,19 @@ class RemoveCartItemSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f'There is no cart item with id={item_id}!')
 
         return data
+
+
+class ShopOrderSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
+
+    class Meta:
+        model = ShopOrder
+        exclude = ['user', 'status']
+
+
+class ShopOrderDetailSerializer(ShopOrderSerializer):
+    status = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = ShopOrder
+        exclude = ['user']
