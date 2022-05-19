@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -41,7 +41,7 @@ class CommentListView(generics.ListAPIView):
 
 
 class CommentCreateView(APIView):
-    permission_classes = [IsAdminUserOrObjectCreator]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = serializers.CommentCreateSerializer(data=request.data, context={'request': request})
