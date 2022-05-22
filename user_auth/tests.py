@@ -128,8 +128,6 @@ class RegisterViewTestCase(TestCase):
 				new_pass_repeat="Mehrdad12345"
 			)
 		)
-		print('*' * 50)
-		print(auth_user_resp.data)
 		self.assertEqual(auth_user_resp.status_code, status.HTTP_200_OK)
 
 		# Wrong password
