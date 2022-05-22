@@ -5,7 +5,6 @@ import json
 
 from user_auth.models import Token, User
 
-
 ONLINE_MARKET_URL = "/api/v1/auth/"
 
 
@@ -81,7 +80,9 @@ class RegisterViewTestCase(TestCase):
 
 	def test_login(self):
 		url = ONLINE_MARKET_URL + 'login/'
-		u = User.objects.create(username="Mehrdad", password="Mehrdad1234", email="mehrdad@mobin.com")
+		u = User.objects.create(username="Mehrdad", email="mehrdad@mobin.com")
+		u.set_password("Mehrdad1234")
+		u.save()
 
 		# Empty fields
 		bad_resp = self.client.post(url, {"username": "", "password": ""})
@@ -127,7 +128,7 @@ class RegisterViewTestCase(TestCase):
 				new_pass_repeat="Mehrdad12345"
 			)
 		)
-		print('*'*50)
+		print('*' * 50)
 		print(auth_user_resp.data)
 		self.assertEqual(auth_user_resp.status_code, status.HTTP_200_OK)
 

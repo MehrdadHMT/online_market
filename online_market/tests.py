@@ -187,13 +187,13 @@ class CommentViewTestCase(TestCase):
 		self.assertEqual(another_user_resp.status_code, status.HTTP_403_FORBIDDEN)
 
 	def test_comment_detail(self):
-		url = ONLINE_MARKET_URL + f'opinion/edit/{self.c.id}'
+		url = ONLINE_MARKET_URL + f'opinion/edit/{self.c.id}/'
 
 		auth_user_resp = self.client.get(url)
 		self.assertEqual(auth_user_resp.status_code, status.HTTP_200_OK)
 
 	def test_comment_delete(self):
-		url = ONLINE_MARKET_URL + f'opinion/edit/{self.c.id}'
+		url = ONLINE_MARKET_URL + f'opinion/edit/{self.c.id}/'
 
 		auth_user_resp = self.client.delete(url)
 		self.assertEqual(auth_user_resp.status_code, status.HTTP_204_NO_CONTENT)
